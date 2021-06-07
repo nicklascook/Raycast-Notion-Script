@@ -1,0 +1,3 @@
+# Raycast-Notion-Script
+
+👷‍♂️
