@@ -16,6 +16,34 @@
 
 const Notion = require("notion-api-js").default;
 require("dotenv").config();
+const fs = require("fs");
+
+const writeToRaycastScript = async ({ title, icon, notionURL }) => {
+  console.log(title, icon);
+  const data = `
+  #!/bin/bash
+
+  # Required parameters:
+  # @raycast.schemaVersion 1
+  # @raycast.title ${title}
+  # @raycast.mode silent
+  
+  # Optional parameters:
+  # @raycast.icon ${icon}
+  # @raycast.packageName ${title}
+  
+  # Documentation:
+  # @raycast.author Nicklas Cook
+  
+  open -a "Google Chrome" '${notionURL}' --args --profile-directory=Default
+  `;
+  // fs.writeFileSync(`./output/`, data);
+};
+
+const encodeTitleForURL = (title) => {
+  // TODO: handle all characters
+  return title.replace(/ /g, "_");
+};
 
 (async () => {
   const notion = new Notion({
@@ -35,20 +63,24 @@ require("dotenv").config();
   if (pageChildren.length !== settledPageChildren.length)
     console.error("Failed during subpage call, some pages may be missing");
 
-  const notionLinks = pageChildren.map((children) => {
-    return children.map((subpage) => {
-      // TODO: create function to format title for URL
-      return `notion://www.notion.so/${subpage.Attributes.title.replace(
-        / /g,
-        "_"
-      )}-${subpage.Attributes.id}`;
-    });
-  });
+  for (const children of pageChildren) {
+    for (const subpage of children) {
+      const { title, icon, id } = subpage.Attributes;
+
+      const notionURL = `notion://www.notion.so/${encodeTitleForURL(
+        title
+      )}-${id.replace(/-/g, "")}`;
+
+      writeToRaycastScript({
+        icon: icon ?? "",
+        title,
+        notionURL,
+      });
+    }
+  }
 
   // TODO: Generate raycast scripts
   // TODO: Save raycast scripts to file
   // TODO: Write README
   // TODO: Write tests
-
-  console.log(notionLinks);
 })();

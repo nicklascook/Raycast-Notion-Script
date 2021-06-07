@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "node generate-notion-page-scripts.js"
+  },
   "dependencies": {
     "dotenv": "^10.0.0",
     "node-fetch": "^2.6.1",
