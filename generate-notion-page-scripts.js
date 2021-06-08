@@ -19,25 +19,27 @@ require("dotenv").config();
 const fs = require("fs");
 
 const writeToRaycastScript = async ({ title, icon, notionURL }) => {
-  console.log(title, icon);
-  const data = `
-  #!/bin/bash
+  const data = `#!/bin/bash
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title ${title}
+# @raycast.mode compact
 
-  # Required parameters:
-  # @raycast.schemaVersion 1
-  # @raycast.title ${title}
-  # @raycast.mode silent
-  
-  # Optional parameters:
-  # @raycast.icon ${icon}
-  # @raycast.packageName ${title}
-  
-  # Documentation:
-  # @raycast.author Nicklas Cook
-  
-  open -a "Google Chrome" '${notionURL}' --args --profile-directory=Default
-  `;
-  // fs.writeFileSync(`./output/`, data);
+# Optional parameters:
+# @raycast.icon ${icon}
+# @raycast.packageName Open in Notion
+
+# Documentation:
+# @raycast.author Nicklas Cook
+# @raycast.authorURL https://github.com/nicklascook
+
+open --hide -a Finder
+open ${notionURL}
+`;
+  await fs.writeFileSync(
+    `./output/raycast-notion-page-${encodeTitleForURL(title)}.sh`,
+    data
+  );
 };
 
 const encodeTitleForURL = (title) => {
@@ -67,7 +69,7 @@ const encodeTitleForURL = (title) => {
     for (const subpage of children) {
       const { title, icon, id } = subpage.Attributes;
 
-      const notionURL = `notion://www.notion.so/${encodeTitleForURL(
+      const notionURL = `notion://www.notion.so/native/${encodeTitleForURL(
         title
       )}-${id.replace(/-/g, "")}`;
 
@@ -78,9 +80,4 @@ const encodeTitleForURL = (title) => {
       });
     }
   }
-
-  // TODO: Generate raycast scripts
-  // TODO: Save raycast scripts to file
-  // TODO: Write README
-  // TODO: Write tests
 })();
