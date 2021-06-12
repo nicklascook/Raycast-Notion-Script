@@ -14,9 +14,10 @@
 // @raycast.author Nicklas Cook
 // @raycast.authorURL https://github.com/nicklascook
 
-const Notion = require("notion-api-js").default;
-require("dotenv").config();
-const fs = require("fs");
+import Notion from "notion-api-js";
+import dotenv from "dotenv";
+import fs from "fs";
+dotenv.config();
 
 const writeToRaycastScript = async ({ title, icon, notionURL }) => {
   const data = `#!/bin/bash
@@ -33,7 +34,19 @@ const writeToRaycastScript = async ({ title, icon, notionURL }) => {
 # @raycast.author Nicklas Cook
 # @raycast.authorURL https://github.com/nicklascook
 
-open --hide -a Finder
+frontMostApplication=$(osascript \
+-e 'tell application "System Events"' \
+-e 'set frontApp to name of first application process whose frontmost is true' \
+-e 'end tell')
+
+if [$frontMostApplication = "Notion"]
+then
+  originalPosition=$(osascript -e 'tell application "Finder" to get the position of the front Finder window')
+  osascript -e 'tell application "Finder" to set the position of the front Finder window to {-1700, -1700}'
+  osascript -e 'tell application "Finder" to activate'
+  osascript -e 'tell application "Finder" to set the position of the front Finder window to {$originalPositions}'
+fi	
+
 open ${notionURL}
 `;
   await fs.writeFileSync(
@@ -47,7 +60,7 @@ const encodeTitleForURL = (title) => {
   return title.replace(/ /g, "_");
 };
 
-(async () => {
+const main = (async () => {
   const notion = new Notion({
     token: process.env.NOTION_V2_TOKEN,
   });
@@ -81,3 +94,5 @@ const encodeTitleForURL = (title) => {
     }
   }
 })();
+
+export default main;
