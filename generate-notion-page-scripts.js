@@ -14,10 +14,9 @@
 // @raycast.author Nicklas Cook
 // @raycast.authorURL https://github.com/nicklascook
 
-import Notion from "notion-api-js";
-import dotenv from "dotenv";
-import fs from "fs";
-dotenv.config();
+const Notion = require("notion-api-js").default;
+require("dotenv").config();
+const fs = require("fs");
 
 const writeToRaycastScript = async ({ title, icon, notionURL }) => {
   const data = `#!/bin/bash
@@ -39,12 +38,9 @@ frontMostApplication=$(osascript \
 -e 'set frontApp to name of first application process whose frontmost is true' \
 -e 'end tell')
 
-if [$frontMostApplication = "Notion"]
+if [ $frontMostApplication = "Notion" ]
 then
-  originalPosition=$(osascript -e 'tell application "Finder" to get the position of the front Finder window')
-  osascript -e 'tell application "Finder" to set the position of the front Finder window to {-1700, -1700}'
-  osascript -e 'tell application "Finder" to activate'
-  osascript -e 'tell application "Finder" to set the position of the front Finder window to {$originalPositions}'
+  open -a Finder
 fi	
 
 open ${notionURL}
@@ -55,12 +51,10 @@ open ${notionURL}
   );
 };
 
-const encodeTitleForURL = (title) => {
-  // TODO: handle all characters
-  return title.replace(/ /g, "_");
-};
+const encodeTitleForURL = (title) =>
+  title.replace(/[!@#$%^&*()\-+=[{\]};:'",./<>?\\ |]/g, "");
 
-const main = (async () => {
+(async () => {
   const notion = new Notion({
     token: process.env.NOTION_V2_TOKEN,
   });
@@ -78,6 +72,10 @@ const main = (async () => {
   if (pageChildren.length !== settledPageChildren.length)
     console.error("Failed during subpage call, some pages may be missing");
 
+  // Remove old scripts
+  await fs.rmSync("./output", { recursive: true, force: true });
+  await fs.mkdirSync("./output");
+
   for (const children of pageChildren) {
     for (const subpage of children) {
       const { title, icon, id } = subpage.Attributes;
@@ -94,5 +92,3 @@ const main = (async () => {
     }
   }
 })();
-
-export default main;
